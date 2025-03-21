@@ -11,18 +11,18 @@ from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from database.ia_filterdb import Media
 from database.users_chats_db import db
-from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, LOG_CHANNEL, PORT ,SUPPORT_CHAT_ID
+from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR, LOG_CHANNEL, PORT, SUPPORT_CHAT_ID
 from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
-from Script import script 
-from datetime import date, datetime 
+from Script import script
+from datetime import date, datetime
 import pytz
 from aiohttp import web
 from plugins import web_server
 
-class Bot(Client):
 
+class Bot(Client):
     def __init__(self):
         super().__init__(
             name=SESSION,
@@ -45,15 +45,31 @@ class Bot(Client):
         temp.U_NAME = me.username
         temp.B_NAME = me.first_name
         self.username = '@' + me.username
-        logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
+        logging.info(f"{me.first_name} with Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
         logging.info(LOG_STR)
         logging.info(script.LOGO)
+
         tz = pytz.timezone('Asia/Kolkata')
         today = date.today()
         now = datetime.now(tz)
         time = now.strftime("%H:%M:%S %p")
-        await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
-        await self.send_message(chat_id=SUPPORT_CHAT_ID, text=script.RESTART_GC_TXT.format(today, time))
+
+        # Attempt to resolve LOG_CHANNEL and cache it
+        try:
+            log_chat = await self.get_chat(LOG_CHANNEL)
+            logging.info(f"Log channel resolved: {log_chat.title}")
+        except Exception as e:
+            logging.error(f"Failed to resolve log channel {LOG_CHANNEL}: {e}")
+            return  # Stop the bot if the log channel is not found
+
+        # Sending messages to LOG_CHANNEL and SUPPORT_CHAT_ID
+        try:
+            await self.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+            await self.send_message(chat_id=SUPPORT_CHAT_ID, text=script.RESTART_GC_TXT.format(today, time))
+        except Exception as e:
+            logging.error(f"Failed to send messages to channels: {e}")
+
+        # Starting the web server
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
