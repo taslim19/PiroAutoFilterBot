@@ -43,11 +43,7 @@ class Bot(Client):
         tz = pytz.timezone('Asia/Kolkata')
         today = date.today()
         now = datetime.now(tz)
-        time = now.strftime("%H:%M:%S %p")
-
-        # Send a restart notification only to the support chat (if needed)
-        await self.send_message(chat_id=SUPPORT_CHAT_ID, text=script.RESTART_GC_TXT.format(today, time))
-        
+        time = now.strftime("%H:%M:%S %p")        
         # Start web server
         app = web.AppRunner(await web_server())
         await app.setup()
